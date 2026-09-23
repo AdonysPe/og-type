@@ -1,346 +1,80 @@
-<title>Monkey Type Clone - Test your typing skills</title>
-
-<style>
-  :root {
-    color-scheme: light dark;
-    --green: #00b755;
-    --yellow: #daaf38;
-    --red: #ca4754;
-    --black: #222;
-    --gray: #999;
-  }
-
-  body {
-    background: var(--black);
-    font-family: Menlo, monospace;
-    display: grid;
-    padding: 32px;
-    justify-content: center;
-    margin-top: 32px;
-    padding: 16px;
-  }
-
-  section {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    max-width: 500px;
-  }
-
-  time {
-    color: var(--yellow);
-  }
-
-  input {
-    z-index: -999;
-    position: absolute;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    opacity: 0;
-  }
-
-  p {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3px 8px;
-    margin: 0;
-  }
-
-  letter {
-    color: var(--gray);
-    position: relative;
-
-    &.active::before {
-      content: '|';
-      color: var(--yellow);
-      font-size: 14px;
-      position: absolute;
-      left: -65%;
-      animation: 1s blink infinite ease-in-out;
-    }
-
-    &.active.is-last::before {
-      left: 65%;
-    }
-
-    &.correct {
-      color: var(--green);
-    }
-
-    &.incorrect {
-      color: var(--red);
-    }
-  }
-
-  word {
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.3s ease-in-out;
-
-    &.marked {
-      border-color: var(--red);
-    }
-  }
-
-  @keyframes blink {
-    0%,
-    25% {
-      opacity: 1;
-    }
-
-    75% {
-      opacity: 0;
-    }
-  }
-
-  #game {
-    display: flex;
-  }
-
-  #results {
-    display: none;
-  }
-
-  h2 {
-    font-weight: 400;
-    opacity: 0.4;
-    margin: 0;
-    font-size: 16px;
-  }
-
-  h3 {
-    font-weight: 400;
-    margin: 0;
-    font-size: 24px;
-    color: var(--yellow);
-  }
-
-  button {
-    background: transparent;
-    border: 0;
-    margin-top: 32px;
-    padding: 8px;
-    opacity: .4;
-    display: inline-block;
-    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-    cursor: pointer;
-    border-radius: 16px;
-
-    &:hover {
-      background: #444;
-      opacity: 1;
-      scale: 110%;
-    }
-  }
-</style>
-
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f5">
+  <meta name="description" content="OG Type: un espacio tranquilo para practicar mecanografía y seguir tu progreso.">
+  <title>OG Type — Encuentra tu ritmo</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
 <body>
-  <main>
-    <section id="game">
-      <time></time>
-      <p></p>
-      <input autofocus />
+  <header class="site-header">
+    <nav class="shell nav" aria-label="Navegación principal">
+      <a class="brand" href="#inicio" aria-label="OG Type, ir al inicio">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M6 9h1m3 0h1m3 0h1m3 0h.1M6 12h1m3 0h1m3 0h1m3 0h.1M8 15h8"/></svg></span>
+        og<span class="brand-accent">type</span>
+      </a>
+      <div class="nav-links"><a class="current" href="#practica">Practicar</a><a href="#guia">Cómo funciona</a></div>
+      <span class="nav-badge">Tu espacio para mejorar</span>
+    </nav>
+  </header>
+  <main id="inicio" class="shell">
+    <section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">Encuentra tu ritmo.<br><em>Una tecla a la vez.</em></h1>
+      <p>Un lugar sencillo para escribir con más fluidez. Enfócate en las palabras; nosotros medimos tu avance.</p>
     </section>
-
-    <section id="results">
-      <h2>WMP</h2>
-      <h3 id="results-wpm"></h3>
-
-      <h2>ACCURACY</h2>
-      <h3 id="results-accuracy"></h3>
-
-      <button id="reload-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747" />
-          <path d="M20 4v5h-5" />
-        </svg>
-      </button>
+    <section id="practica" class="workspace" aria-label="Práctica de mecanografía">
+      <div class="practice">
+        <div class="panel-heading">
+          <div><h2>Tu práctica comienza aquí</h2><p>El tiempo empieza cuando escribes la primera letra.</p></div>
+          <span class="live-dot" id="status">Listo para empezar</span>
+        </div>
+        <div class="controls">
+          <span class="control-label">Duración</span>
+          <div class="segmented" role="group" aria-label="Duración de la prueba">
+            <button class="duration" type="button" data-seconds="15" aria-pressed="false">15 s</button>
+            <button class="duration active" type="button" data-seconds="30" aria-pressed="true">30 s</button>
+            <button class="duration" type="button" data-seconds="60" aria-pressed="false">60 s</button>
+            <button class="duration" type="button" data-seconds="120" aria-pressed="false">120 s</button>
+          </div>
+          <label class="language-wrap"><span class="control-label">Idioma</span><select id="language" aria-label="Idioma de las palabras"><option value="es">Español</option><option value="en">English</option></select></label>
+        </div>
+        <div id="typing-area" class="typing-surface" tabindex="0" role="group" aria-label="Palabras para escribir. Pulsa aquí y empieza a teclear.">
+          <div id="reading" class="reading" aria-hidden="true"></div>
+          <span id="current-word" class="sr-only" aria-live="polite"></span>
+          <span class="surface-hint">Haz clic aquí o empieza a escribir · Espacio para avanzar</span>
+          <input id="typing-input" class="typing-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Escribe las palabras que aparecen en la pantalla">
+        </div>
+        <div id="result" class="result" aria-live="polite">
+          <h3>Buen trabajo.</h3>
+          <p id="result-message">Cada sesión es un paso más hacia tu ritmo.</p>
+          <div class="result-stats"><div><strong id="result-wpm">0</strong><span>Palabras por minuto</span></div><div><strong id="result-accuracy">0%</strong><span>Precisión</span></div></div>
+          <button id="retry" class="primary-button" type="button">Intentar de nuevo</button>
+        </div>
+        <div class="progress-track" aria-hidden="true"><div id="progress"></div></div>
+        <div class="panel-footer">
+          <div class="time-group"><span id="timer" aria-live="off">30</span><span>segundos restantes</span></div>
+          <button id="reset" class="reset" type="button" aria-label="Reiniciar práctica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>Reiniciar</button>
+        </div>
+      </div>
+      <aside class="insights" aria-label="Estadísticas de la sesión">
+        <h2>Tu progreso, en vivo.</h2><p>Una vista clara de lo que estás logrando ahora mismo.</p>
+        <div class="metric"><span class="metric-label">Velocidad</span><div class="metric-value"><span id="live-wpm">0</span><small>PPM</small></div></div>
+        <div class="metric"><span class="metric-label">Precisión</span><div class="metric-value"><span id="live-accuracy">—</span><small>%</small></div></div>
+        <div class="personal-best"><span>Mejor resultado en este dispositivo</span><strong id="best">Aún no hay sesiones</strong></div>
+      </aside>
+    </section>
+    <section id="guia" class="guide" aria-labelledby="guide-title">
+      <h2 id="guide-title">Así de simple.</h2>
+      <div class="guide-list">
+        <div class="guide-item"><strong>Elige tu ritmo</strong><p>Selecciona la duración y el idioma que prefieras.</p></div>
+        <div class="guide-item"><strong>Escribe sin distracciones</strong><p>Usa la barra espaciadora para pasar a la siguiente palabra.</p></div>
+        <div class="guide-item"><strong>Observa tu avance</strong><p>Revisa tu velocidad y precisión al terminar.</p></div>
+      </div>
     </section>
   </main>
+  <footer class="site-footer"><div class="shell footer-inner"><span>OG Type · Escribir mejor se practica.</span><span>Tu mejor resultado se guarda solo en este dispositivo.</span></div></footer>
 </body>
-
-<script type="module">
-  import { words as INITIAL_WORDS } from "./data.js";
-
-  const $time = document.querySelector("time");
-  const $paragraph = document.querySelector("p");
-  const $input = document.querySelector("input");
-  const $game = document.querySelector("#game");
-  const $results = document.querySelector("#results");
-  const $wpm = $results.querySelector('#results-wpm');
-  const $accuracy = $results.querySelector('#results-accuracy');
-  const $button = document.querySelector('#reload-button')
-
-  const INITIAL_TIME = 60;
-
-  let words = [];
-  let currentTime = INITIAL_TIME;
-  let playing
-
-  initGame();
-  initEvents();
-
-  function initGame() {
-
-    $game.style.display = 'flex'
-    $results.style.display = 'none'
-    $input.value = ''
-
-    playing = false
-
-    words = INITIAL_WORDS.toSorted(() => Math.random() - 0.5).slice(0, 55);
-    currentTime = INITIAL_TIME;
-
-    $time.textContent = currentTime;
-
-    $paragraph.innerHTML = words
-      .map((word, index) => {
-        const letters = word.split('')
-
-        return `<word>
-        ${letters
-            .map(letter => `<letter>${letter}</letter>`)
-            .join('')
-        }
-        </word>
-        `
-      }).join('')
-
-    const $firstWord = $paragraph.querySelector('word');
-    $firstWord.classList.add('active');
-    $firstWord.querySelector('letter').classList.add('active');
-  }
-
-  function initEvents() {
-    document.addEventListener('keydown', () => {
-      $input.focus()
-      if(!playing){
-        playing = true
-        const intervalId = setInterval(() => {
-            currentTime--
-            $time.textContent = currentTime
-
-            if(currentTime === 0){
-                clearInterval(intervalId)
-                gameOver()
-            }
-        }, 1000)
-      }
-    });
-    $input.addEventListener('keydown', onKeyDown);
-    $input.addEventListener('keyup', onKeyUp);
-    $button.addEventListener('click', initGame);
-  }
-
-  function onKeyDown(event) {
-    const $currentWord = $paragraph.querySelector('word.active');
-    const $currentLetter = $currentWord.querySelector('letter.active');
-
-    const { key } = event
-    if (key === ' ') {
-      event.preventDefault()
-
-      const $nextWord = $currentWord.nextElementSibling;
-      const $nextLetter = $nextWord.querySelector('letter');
-
-      $currentWord.classList.remove('active', 'marked');
-      $currentLetter.classList.remove('active');
-
-      $nextWord.classList.add('active');
-      $nextLetter.classList.add('active');
-
-      $input.value = '';
-
-      const hasMissedLetters =
-        $currentWord.querySelectorAll('letter:not(.correct)').length > 0;
-
-      const classToAdd = hasMissedLetters ? 'marked' : 'correct';
-      $currentWord.classList.add(classToAdd);
-      return
-    }
-
-    if (key === 'Backspace') {
-      const $prevWord = $currentWord.previousElementSibling
-      const $prevLetter = $currentLetter.previousElementSibling
-
-      if (!$prevWord && !$prevLetter) {
-        event.preventDefault()
-        return
-      }
-
-      const $wordMarked = $paragraph.querySelector('word.marked');
-      if (!$wordMarked && !$prevLetter) {
-        event.preventDefault()
-        $prevWord.classList.remove('marked')
-        $prevWord.classList.add('active')
-
-        const $letterToGo = $prevWord.querySelector('letter:last-child');
-
-        $currentLetter.classList.remove('active');
-        $letterToGo.classList.add('active');
-
-        $input.value = [
-          ...$prevWord.querySelectorAll('letter.correct, letter.incorrect'),
-        ]
-          .map(($el) => {
-            return $el.classList.contains('correct') ? $el.innerText : '*';
-          })
-          .join('');
-      }
-    }
-  }
-
-  function onKeyUp() {
-    const $currentWord = $paragraph.querySelector('word.active')
-    const $currentLetter = $currentWord.querySelector('letter.active')
-
-    const currentWord = $currentWord.innerText.trim();
-    $input.maxLength = currentWord.length;
-
-    const $allLetters = $currentWord.querySelectorAll('letter')
-
-    $allLetters.forEach(($letter) =>
-      $letter.classList.remove('correct', 'incorrect')
-    );
-    $input.value.split('').forEach((char, index) => {
-      const $letter = $allLetters[index]
-      const letterToCheck = currentWord[index]
-
-      const isCorrect = char === letterToCheck;
-      const letterClass = isCorrect ? 'correct' : 'incorrect'
-      $letter.classList.add(letterClass)
-    });
-
-    $currentLetter.classList.remove('active', 'is-last');
-    const inputLength = $input.value.length;
-    const $nextActiveLetter = $allLetters[inputLength];
-
-    if ($nextActiveLetter) {
-      $nextActiveLetter.classList.add('active');
-    } else {
-      $currentLetter.classList.add('active', 'is-last');
-    }
-  }
-
-  function gameOver() {
-    $game.style.display = 'none';
-    $results.style.display = 'flex';
-
-    const correctWords = $paragraph.querySelectorAll('word.correct').length;
-    const correctLetter = $paragraph.querySelectorAll('letter.correct').length;
-    const incorrectLetter =
-      $paragraph.querySelectorAll('letter.incorrect').length;
-
-    const totalLetters = correctLetter + incorrectLetter;
-    const accuracy = totalLetters > 0
-      ? (correctLetter / totalLetters) * 100
-      : 0
-
-    const wpm = correctWords * 60 / INITIAL_TIME
-    $wpm.textContent = wpm
-    $accuracy.textContent = `${accuracy.toFixed(2)}%`
-  }
-</script>
+</html>
