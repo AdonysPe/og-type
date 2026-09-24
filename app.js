@@ -11,8 +11,15 @@ const progress = $('#progress');
 const status = $('#status');
 const liveWpm = $('#live-wpm');
 const liveAccuracy = $('#live-accuracy');
+const accuracyTrack = $('#accuracy-track');
+const accuracyFill = $('#accuracy-fill');
+const soundToggle = $('#sound-toggle');
 const language = $('#language');
 const best = $('#best');
+const focusChrome = document.querySelectorAll('.site-header, .intro, .guide, .site-footer');
+let soundEnabled = false;
+let audioContext;
+let clickBuffer;
 const state = {
   duration: 30, words: [], index: 0, value: '', completedCorrect: 0,
   completedTyped: 0, startedAt: 0, remaining: 30, interval: null, finished: false
@@ -44,8 +51,15 @@ function showBest() {
   }
 }
 
+function setFocusMode(active) {
+  document.body.classList.toggle('is-focused', active);
+  // Hidden navigation must also leave the keyboard and screen-reader order.
+  focusChrome.forEach((element) => { element.inert = active; });
+}
+
 function reset() {
   clearInterval(state.interval);
+  setFocusMode(false);
   Object.assign(state, {
     words: shuffledWords(language.value === 'es' ? spanishWords : englishWords),
     index: 0, value: '', completedCorrect: 0, completedTyped: 0,
@@ -73,6 +87,9 @@ function reset() {
   status.textContent = 'Listo para empezar';
   liveWpm.textContent = '0';
   liveAccuracy.textContent = '—';
+  accuracyFill.style.transform = 'scaleX(0)';
+  accuracyTrack.removeAttribute('aria-valuenow');
+  accuracyTrack.setAttribute('aria-valuetext', 'Sin datos');
   updateLetters();
   showBest();
 }
@@ -89,13 +106,24 @@ function counts() {
 function updateMetrics() {
   const { correct, typed } = counts();
   const elapsed = state.startedAt ? Math.max((Date.now() - state.startedAt) / 1000, 1) : 0;
+  // PPM uses the standard five-correct-characters-per-word convention.
   liveWpm.textContent = elapsed ? String(Math.round((correct / 5) / (elapsed / 60))) : '0';
-  liveAccuracy.textContent = typed ? String(Math.round(correct / typed * 100)) : '—';
+  const accuracy = typed ? Math.round(correct / typed * 100) : null;
+  liveAccuracy.textContent = accuracy === null ? '—' : String(accuracy);
+  accuracyFill.style.transform = `scaleX(${accuracy === null ? 0 : accuracy / 100})`;
+  if (accuracy === null) {
+    accuracyTrack.removeAttribute('aria-valuenow');
+    accuracyTrack.setAttribute('aria-valuetext', 'Sin datos');
+  } else {
+    accuracyTrack.setAttribute('aria-valuenow', String(accuracy));
+    accuracyTrack.setAttribute('aria-valuetext', `${accuracy} por ciento`);
+  }
 }
 
 function updateLetters() {
   const wordEl = reading.children[state.index];
   if (!wordEl) return;
+  wordEl.classList.add('current');
   $('#current-word').textContent = `Palabra actual: ${state.words[state.index]}`;
   [...wordEl.children].forEach((letter, i) => {
     letter.className = 'letter';
@@ -111,6 +139,7 @@ function updateLetters() {
 function start() {
   if (state.startedAt) return;
   state.startedAt = Date.now();
+  setFocusMode(true);
   status.textContent = 'Sesión en curso';
   state.interval = setInterval(() => {
     state.remaining = Math.max(0, state.duration - (Date.now() - state.startedAt) / 1000);
@@ -128,6 +157,8 @@ function commitWord() {
   const correct = [...state.value].filter((char, i) => char === word[i]).length;
   state.completedCorrect += correct;
   state.completedTyped += Math.max(state.value.length, word.length);
+  wordEl.classList.remove('current');
+  wordEl.classList.add('completed');
   if (state.value !== word) wordEl.classList.add('missed');
   wordEl.querySelectorAll('.active').forEach((letter) => letter.classList.remove('active', 'end'));
   state.index++;
@@ -144,6 +175,7 @@ function finish() {
   if (state.finished) return;
   state.finished = true;
   clearInterval(state.interval);
+  setFocusMode(false);
   const { correct, typed } = counts();
   const elapsed = state.startedAt ? Math.min(state.duration, Math.max((Date.now() - state.startedAt) / 1000, 1)) : state.duration;
   const wpm = Math.round((correct / 5) / (elapsed / 60));
@@ -167,6 +199,7 @@ function finish() {
 
 input.addEventListener('input', () => {
   if (state.finished) return;
+  playKeySound();
   const raw = input.value.toLowerCase();
   if (/\s/.test(raw)) {
     state.value = raw.split(/\s/)[0];
@@ -186,12 +219,8 @@ input.addEventListener('input', () => {
 input.addEventListener('keydown', (event) => {
   if (event.key === ' ') {
     event.preventDefault();
+    playKeySound();
     commitWord();
-  }
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    reset();
-    input.focus();
   }
 });
 area.addEventListener('click', () => input.focus());
@@ -202,14 +231,59 @@ area.addEventListener('keydown', (event) => {
   }
 });
 document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    reset();
+    input.focus();
+    return;
+  }
   if (state.finished || event.altKey || event.ctrlKey || event.metaKey || event.key.length !== 1 || /INPUT|SELECT|BUTTON|TEXTAREA/.test(document.activeElement.tagName)) return;
   event.preventDefault();
   input.focus();
-  if (event.key === ' ') commitWord();
+  if (event.key === ' ') {
+    playKeySound();
+    commitWord();
+  }
   else {
     input.value += event.key;
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
+});
+// A short filtered noise burst makes a key click without loading audio assets.
+function playKeySound() {
+  if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
+  const source = audioContext.createBufferSource();
+  const filter = audioContext.createBiquadFilter();
+  const gain = audioContext.createGain();
+  const now = audioContext.currentTime;
+  source.buffer = clickBuffer;
+  filter.type = 'highpass';
+  filter.frequency.value = 750;
+  gain.gain.setValueAtTime(0.045, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+  source.connect(filter).connect(gain).connect(audioContext.destination);
+  source.start(now);
+  source.stop(now + 0.025);
+}
+
+soundToggle.addEventListener('click', async () => {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      soundToggle.disabled = true;
+      soundToggle.title = 'El sonido no está disponible en este navegador';
+      return;
+    }
+    audioContext = new AudioContextClass();
+    clickBuffer = audioContext.createBuffer(1, Math.ceil(audioContext.sampleRate * 0.025), audioContext.sampleRate);
+    const samples = clickBuffer.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / samples.length);
+  }
+  if (audioContext.state === 'suspended') await audioContext.resume();
+  soundEnabled = !soundEnabled;
+  soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+  soundToggle.setAttribute('aria-label', soundEnabled ? 'Desactivar sonido de teclas' : 'Activar sonido de teclas');
+  soundToggle.title = soundEnabled ? 'Sonido de teclas activado' : 'Sonido de teclas desactivado';
 });
 document.querySelectorAll('.duration').forEach((button) => button.addEventListener('click', () => {
   state.duration = Number(button.dataset.seconds);

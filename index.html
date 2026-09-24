@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f7f5">
+  <meta name="theme-color" content="#f9fafb">
   <meta name="description" content="OG Type: un espacio tranquilo para practicar mecanografía y seguir tu progreso.">
   <title>OG Type — Encuentra tu ritmo</title>
   <link rel="stylesheet" href="./styles.css">
@@ -17,7 +17,7 @@
         og<span class="brand-accent">type</span>
       </a>
       <div class="nav-links"><a class="current" href="#practica">Practicar</a><a href="#guia">Cómo funciona</a></div>
-      <span class="nav-badge">Tu espacio para mejorar</span>
+      <a class="nav-badge" href="#practica">Empezar a practicar</a>
     </nav>
   </header>
   <main id="inicio" class="shell">
@@ -40,6 +40,9 @@
             <button class="duration" type="button" data-seconds="120" aria-pressed="false">120 s</button>
           </div>
           <label class="language-wrap"><span class="control-label">Idioma</span><select id="language" aria-label="Idioma de las palabras"><option value="es">Español</option><option value="en">English</option></select></label>
+          <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="false" aria-label="Activar sonido de teclas" title="Sonido de teclas desactivado">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9a5 5 0 0 1 0 6"/><path d="M20 6a9 9 0 0 1 0 12"/></svg><span>Sonido</span>
+          </button>
         </div>
         <div id="typing-area" class="typing-surface" tabindex="0" role="group" aria-label="Palabras para escribir. Pulsa aquí y empieza a teclear.">
           <div id="reading" class="reading" aria-hidden="true"></div>
@@ -58,11 +61,12 @@
           <div class="time-group"><span id="timer" aria-live="off">30</span><span>segundos restantes</span></div>
           <button id="reset" class="reset" type="button" aria-label="Reiniciar práctica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>Reiniciar</button>
         </div>
+        <p class="shortcut-hint">Atajos: <kbd>Espacio</kbd> siguiente palabra · <kbd>Tab</kbd> hasta Reiniciar + <kbd>Enter</kbd> · <kbd>Esc</kbd> reiniciar</p>
       </div>
       <aside class="insights" aria-label="Estadísticas de la sesión">
         <h2>Tu progreso, en vivo.</h2><p>Una vista clara de lo que estás logrando ahora mismo.</p>
         <div class="metric"><span class="metric-label">Velocidad</span><div class="metric-value"><span id="live-wpm">0</span><small>PPM</small></div></div>
-        <div class="metric"><span class="metric-label">Precisión</span><div class="metric-value"><span id="live-accuracy">—</span><small>%</small></div></div>
+        <div class="metric accuracy-metric"><span class="metric-label">Precisión</span><div class="metric-value"><span id="live-accuracy">—</span><small>%</small></div><div id="accuracy-track" class="accuracy-track" role="progressbar" aria-label="Precisión" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Sin datos"><span id="accuracy-fill"></span></div></div>
         <div class="personal-best"><span>Mejor resultado en este dispositivo</span><strong id="best">Aún no hay sesiones</strong></div>
       </aside>
     </section>
